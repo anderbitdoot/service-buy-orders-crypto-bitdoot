@@ -1,0 +1,23 @@
+services:
+  app-wallet-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wallet-bitdoot
+    restart: no
+    env_file:
+      - .env.docker
+      # - .env.qa     # descomentar en servidor QA
+      # - .env.prod   # descomentar en producción
+    ports:
+      - "4200:4200"
+    volumes:
+      - .:/home/app
+      - /home/app/node_modules
+    networks:
+      - bitdoot-net
+
+networks:
+  bitdoot-net:
+    external: true
+    name: bitdoot-net

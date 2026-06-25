@@ -1,0 +1,16 @@
+{
+  "name": "service-buy-orders-crypto-bitdoot",
+  "scripts": {
+    "dev": "bun run --env-file=.env.dev scripts/check-infra.ts && bun run --env-file=.env.dev --hot src/index.ts",
+    "docker:dev": "bun run --env-file=.env.docker src/index.ts",
+    "qa": "bun run --env-file=.env.qa src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.12.26",
+    "mongoose": "^8.9.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
