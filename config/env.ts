@@ -1,13 +1,12 @@
 import { z, ZodError } from "zod";
 
 const envSchema = z.object({
-    // Server
     PORT: z.string().default("4100"),
     DEPLOY_ENV: z.enum(["dev", "docker", "qa", "prod"]),
     NODE_ENV: z.string().default("development"),
-    SERVICE_NAME: z.string().default("BUY CRYPTOZ ORDER"),
+    SERVICE_NAME: z.string().default("BUY CRYPTO ORDER"),
+    REQUEST_TIMEOUT_MS: z.coerce.number().default(30000),
 
-    // MongoDB
     MONGODB_URI:                z.url(),
     MONGODB_DATABASE:           z.string().default("bitdoot_db"),
     MONGODB_MAX_POOL_SIZE:      z.coerce.number().default(10),
@@ -15,7 +14,11 @@ const envSchema = z.object({
     MONGODB_CONNECT_TIMEOUT_MS: z.coerce.number().default(10000),
     MONGODB_SOCKET_TIMEOUT_MS:  z.coerce.number().default(45000),
 
-    // Inter-service URLs
+    COMMONS_ASSETS_API_URL: z.url().default("https://api.bitdoot.dev/v1/commons/assets"),
+    EXCHANGE_RATE_REFRESH_MS: z.coerce.number().default(5000),
+
+    WALLET_SERVICE_URL: z.url().default("http://localhost:4100"),
+    JWT_SECRET: z.string().default("secret"),
 });
 
 export type EnvSchema = z.infer<typeof envSchema>;

@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { createApp } from "./app";
 import { mongoDBConfig} from "./shared/database/mongodb";
 import { ENV} from "../config/env";
