@@ -1,0 +1,15 @@
+export const DANGEROUS_FIELDS = [
+    '__proto__',
+    'constructor',
+    'prototype',
+    'isAdmin',
+    'role',
+    'permissions',
+    'admin',
+    'superuser',
+    'root',
+    '__defineGetter__',
+    '__defineSetter__',
+    '__lookupGetter__',
+    '__lookupSetter__',
+];
