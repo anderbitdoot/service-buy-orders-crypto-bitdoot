@@ -16,16 +16,16 @@ export interface BuyCryptoOrderResponseData {
 export class BuyCryptoOrderMapper {
     static toResponse(order: BuyCryptoOrder): BuyCryptoOrderResponseData {
         return {
-            quote_id: order.orderId,
-            from: order.from,
-            to: order.to,
-            amount: order.amount,
+            quote_id:       order.orderId,
+            from:           order.from,
+            to:             order.to,
+            amount:         order.amount,
             receive_amount: order.receiveAmount,
-            price: order.price,
-            fee_rate: order.feeRate,
-            fee_amount: order.feeAmount,
-            total: order.total,
-            expire_at: order.expireAt.toISOString(),
+            price:          order.price,
+            fee_rate:       order.feeRate,
+            fee_amount:     order.feeAmount,
+            total:          order.total,
+            expire_at:      order.expireAt.toISOString(),
         };
     }
 }

@@ -1,9 +1,9 @@
 import { z, ZodError } from "zod";
 
 const envSchema = z.object({
-    PORT: z.string().default("4100"),
-    DEPLOY_ENV: z.enum(["dev", "docker", "qa", "prod"]),
-    NODE_ENV: z.string().default("development"),
+    PORT:         z.string().default("4200"),
+    DEPLOY_ENV:   z.enum(["dev", "docker", "qa", "prod"]),
+    NODE_ENV:     z.string().default("development"),
     SERVICE_NAME: z.string().default("BUY CRYPTO ORDER"),
     REQUEST_TIMEOUT_MS: z.coerce.number().default(30000),
 
@@ -14,11 +14,13 @@ const envSchema = z.object({
     MONGODB_CONNECT_TIMEOUT_MS: z.coerce.number().default(10000),
     MONGODB_SOCKET_TIMEOUT_MS:  z.coerce.number().default(45000),
 
-    COMMONS_ASSETS_API_URL: z.url().default("https://api.bitdoot.dev/v1/commons/assets"),
+    COMMONS_ASSETS_API_URL:   z.url().default("https://api.bitdoot.dev/v1/commons/assets"),
+    COMMONS_SERVICE_TOKEN:    z.string().min(1, "COMMONS_SERVICE_TOKEN is required"),
     EXCHANGE_RATE_REFRESH_MS: z.coerce.number().default(5000),
+    USE_LIVE_EXCHANGE_RATE:   z.coerce.boolean().default(false),
+    FALLBACK_EXCHANGE_RATE:   z.coerce.number().default(3.5),
 
-    WALLET_SERVICE_URL: z.url().default("http://localhost:4100"),
-    JWT_SECRET: z.string().default("secret"),
+    JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
 });
 
 export type EnvSchema = z.infer<typeof envSchema>;

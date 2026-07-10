@@ -1,3 +1,8 @@
+export interface TokenPrice {
+    symbol: string;
+    price:  number;
+}
+
 export interface AssetPriceProviderPort {
-    getPrice(symbol: string): Promise<number>;
+    getPricesByQuote(quoteCurrency: string): Promise<TokenPrice[]>;
 }

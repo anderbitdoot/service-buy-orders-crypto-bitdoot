@@ -2,7 +2,7 @@ import { DomainError } from "../../../shared/utils/exceptionTypes/DomainErrors";
 
 export class InvalidCurrencyPairError extends DomainError {
     constructor(from: string, to: string) {
-        super(`Currency pair ${from}_${to} is not supported`);
+        super(`Currency pair ${from}→${to} is not supported`);
         this.name = "InvalidCurrencyPairError";
     }
 }

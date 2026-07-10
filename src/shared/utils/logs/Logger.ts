@@ -14,24 +14,25 @@ class Logger {
         this.context = context;
     }
 
-    private format(level: LogLevel, message: string, requiredTimestap: boolean,): string {
-        const timestamp = new Date().toISOString();
+    private format(level: LogLevel, message: string, showTimestamp: boolean): string {
         const icon = LEVEL_ICONS[level];
-        return `${icon} [${requiredTimestap} ? ${timestamp} : ''] [${this.context}] ${message}`;
+        const timestamp = showTimestamp ? ` [${new Date().toISOString()}]` : "";
+        return `${icon}${timestamp} [${this.context}] ${message}`;
     }
 
-    info(message: string, requiredTimestap: boolean):  void {
-        console.log(this.format("info", message, requiredTimestap));
+    info(message: string, showTimestamp: boolean = false): void {
+        console.log(this.format("info", message, showTimestamp));
     }
 
-    warn(message: string, requiredTimestap: boolean):  void {
-        console.warn(this.format("warn", message, requiredTimestap));
+    warn(message: string, showTimestamp: boolean = false): void {
+        console.warn(this.format("warn", message, showTimestamp));
     }
 
-    error(message: string, requiredTimestap: boolean, err?: unknown, ): void {
-        console.error(this.format("error", message, requiredTimestap));
+    error(message: string, showTimestamp: boolean = false, err?: unknown): void {
+        console.error(this.format("error", message, showTimestamp));
         if (err) console.error(err);
     }
+
     debug(message: string): void {
         if (process.env.NODE_ENV !== "production") {
             console.log(this.format("debug", message, false));

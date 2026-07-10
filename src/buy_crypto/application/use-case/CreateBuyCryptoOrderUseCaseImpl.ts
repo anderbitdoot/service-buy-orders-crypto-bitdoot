@@ -5,11 +5,16 @@ import type {
     CreateBuyCryptoOrderInput,
 } from "../../domain/ports/in/CreateBuyCryptoOrderUseCase";
 import type { ExchangeRateCachePort } from "../../domain/ports/out/ExchangeRateCachePort";
+import type { AssetPriceProviderPort } from "../../domain/ports/out/AssetPriceProviderPort";
 import type { BuyCryptoOrderRepositoryPort } from "../../domain/ports/out/BuyCryptoOrderRepositoryPort";
 import { BuyCryptoOrder } from "../../domain/model/BuyCryptoOrder";
 import { BuyCryptoOrderCalculator } from "../service/BuyCryptoOrderCalculator";
-import { InvalidCurrencyPairError, InvalidOrderAmountError } from "../../domain/error/BuyCryptoOrderDomainError";
+import {
+    InvalidCurrencyPairError,
+    InvalidOrderAmountError,
+} from "../../domain/error/BuyCryptoOrderDomainError";
 import { BuyCryptoOrderConstants } from "../../domain/constants/BuyCryptoOrderConstants";
+import { ENV } from "../../../../config/env";
 import { createLogger } from "../../../shared/utils/logs/Logger";
 
 const logger = createLogger("CreateBuyCryptoOrderUseCase");
@@ -19,19 +24,22 @@ export class CreateBuyCryptoOrderUseCaseImpl implements CreateBuyCryptoOrderUseC
     constructor(
         @inject(BuyCryptoOrderTokens.ExchangeRateCachePort)
         private readonly exchangeRateCache: ExchangeRateCachePort,
+
+        @inject(BuyCryptoOrderTokens.AssetPriceProviderPort)
+        private readonly assetPriceProvider: AssetPriceProviderPort,
+
         @inject(BuyCryptoOrderTokens.BuyCryptoOrderRepositoryPort)
         private readonly buyCryptoOrderRepository: BuyCryptoOrderRepositoryPort
-        // TODO: inyectar WalletBalancePort cuando se confirme el flujo de ejecución/wallet
     ) {}
 
     async execute(input: CreateBuyCryptoOrderInput): Promise<BuyCryptoOrder> {
         const from = input.from.toLowerCase();
-        const to = input.to.toLowerCase();
+        const to   = input.to.toLowerCase();
 
-        if (
-            !BuyCryptoOrderConstants.SUPPORTED_FROM_CURRENCIES.includes(from as any) ||
-            !BuyCryptoOrderConstants.SUPPORTED_TO_CURRENCIES.includes(to as any)
-        ) {
+        if (!BuyCryptoOrderConstants.SUPPORTED_FROM_CURRENCIES.includes(from as any)) {
+            throw new InvalidCurrencyPairError(from, to);
+        }
+        if (!BuyCryptoOrderConstants.SUPPORTED_TO_TOKENS.includes(to as any)) {
             throw new InvalidCurrencyPairError(from, to);
         }
 
@@ -39,19 +47,16 @@ export class CreateBuyCryptoOrderUseCaseImpl implements CreateBuyCryptoOrderUseC
             throw new InvalidOrderAmountError(input.amount);
         }
 
-        const cachedPrice = this.exchangeRateCache.getRate(`${from}_${to}`);
-        const price = cachedPrice && cachedPrice > 0 ? cachedPrice : BuyCryptoOrderConstants.DEFAULT_EXCHANGE_RATE;
+        const price = await this.resolvePrice(from, to);
 
-        const { receiveAmount, feeRate, feeAmount, total } = BuyCryptoOrderCalculator.calculate({
-            amount: input.amount,
-            price,
-        });
+        const { receiveAmount, feeRate, feeAmount, total } =
+            BuyCryptoOrderCalculator.calculate({ amount: input.amount, price });
 
         const order = BuyCryptoOrder.create({
             userId: input.userId,
             from,
             to,
-            amount: input.amount,
+            amount:        input.amount,
             receiveAmount,
             price,
             feeRate,
@@ -60,16 +65,36 @@ export class CreateBuyCryptoOrderUseCaseImpl implements CreateBuyCryptoOrderUseC
         });
 
         await this.buyCryptoOrderRepository.save(order);
-        logger.info(`Order ${order.orderId} created for user ${input.userId ?? "unknown"}`, false);
 
-        // TODO (pendiente de confirmación): reflejar en service-wallet.
-        // await this.walletBalancePort.creditBalance({
-        //   userId: input.userId!,
-        //   token: to.toUpperCase(),
-        //   amount: receiveAmount,
-        //   reference: order.orderId,
-        // });
+        const source = ENV.USE_LIVE_EXCHANGE_RATE ? "monitor-cache" : "fallback";
+        logger.info(
+            `Order ${order.orderId} — ${input.amount} ${from.toUpperCase()} → ${receiveAmount} ${to.toUpperCase()} @ ${price} [${source}]`,
+            false
+        );
 
         return order;
+    }
+
+    private async resolvePrice(from: string, to: string): Promise<number> {
+        const pair = `${from}_${to}`;
+
+        if (ENV.USE_LIVE_EXCHANGE_RATE) {
+            const cached = this.exchangeRateCache.getRate(pair);
+            if (cached !== null && cached > 0) {
+                return cached;
+            }
+
+            logger.warn(`Cache miss for ${pair} — fetching on-demand (first request)`, false);
+            const prices = await this.assetPriceProvider.getPricesByQuote(from.toUpperCase());
+            const match  = prices.find((p) => p.symbol.toLowerCase() === to);
+
+            if (match && match.price > 0) {
+                this.exchangeRateCache.setRate(pair, match.price);
+                return match.price;
+            }
+        }
+
+        logger.warn(`Using fallback rate for ${pair}: ${ENV.FALLBACK_EXCHANGE_RATE}`, false);
+        return ENV.FALLBACK_EXCHANGE_RATE;
     }
 }
