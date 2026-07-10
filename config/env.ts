@@ -17,8 +17,7 @@ const envSchema = z.object({
     COMMONS_ASSETS_API_URL:   z.url().default("https://api.bitdoot.dev/v1/commons/assets"),
     COMMONS_SERVICE_TOKEN:    z.string().min(1, "COMMONS_SERVICE_TOKEN is required"),
     EXCHANGE_RATE_REFRESH_MS: z.coerce.number().default(5000),
-    USE_LIVE_EXCHANGE_RATE:   z.coerce.boolean().default(false),
-    FALLBACK_EXCHANGE_RATE:   z.coerce.number().default(3.5),
+    USE_LIVE_EXCHANGE_RATE:   z.coerce.boolean().default(true),
 
     JWT_SECRET: z.string().min(1, "JWT_SECRET is required"),
 });

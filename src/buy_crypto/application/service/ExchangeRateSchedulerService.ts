@@ -21,16 +21,7 @@ export class ExchangeRateSchedulerService {
     ) {}
 
     start(intervalMs: number): void {
-        if (!ENV.USE_LIVE_EXCHANGE_RATE) {
-            logger.info(
-                `Live rate DISABLED — using fallback: ${ENV.FALLBACK_EXCHANGE_RATE}`,
-                false
-            );
-            return;
-        }
-
         logger.info(`Exchange rate monitor started — polling every ${intervalMs / 1000}s`, false);
-
         this.refresh();
         this.intervalId = setInterval(() => this.refresh(), intervalMs);
     }
@@ -53,7 +44,7 @@ export class ExchangeRateSchedulerService {
             const prices = await this.assetPriceProvider.getPricesByQuote(fromCurrency);
 
             if (prices.length === 0) {
-                logger.warn(`No prices returned for quote=${fromCurrency.toUpperCase()} — keeping previous cache`, false);
+                logger.warn(`No prices returned for quote=${fromCurrency.toUpperCase()}`, false);
                 return;
             }
 

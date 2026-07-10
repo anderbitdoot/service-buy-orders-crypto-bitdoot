@@ -12,9 +12,9 @@ import { BuyCryptoOrderCalculator } from "../service/BuyCryptoOrderCalculator";
 import {
     InvalidCurrencyPairError,
     InvalidOrderAmountError,
+    AssetPriceUnavailableError,
 } from "../../domain/error/BuyCryptoOrderDomainError";
 import { BuyCryptoOrderConstants } from "../../domain/constants/BuyCryptoOrderConstants";
-import { ENV } from "../../../../config/env";
 import { createLogger } from "../../../shared/utils/logs/Logger";
 
 const logger = createLogger("CreateBuyCryptoOrderUseCase");
@@ -66,9 +66,8 @@ export class CreateBuyCryptoOrderUseCaseImpl implements CreateBuyCryptoOrderUseC
 
         await this.buyCryptoOrderRepository.save(order);
 
-        const source = ENV.USE_LIVE_EXCHANGE_RATE ? "monitor-cache" : "fallback";
         logger.info(
-            `Order ${order.orderId} — ${input.amount} ${from.toUpperCase()} → ${receiveAmount} ${to.toUpperCase()} @ ${price} [${source}]`,
+            `Order ${order.orderId} — ${input.amount} ${from.toUpperCase()} → ${receiveAmount} ${to.toUpperCase()} @ ${price}`,
             false
         );
 
@@ -78,23 +77,21 @@ export class CreateBuyCryptoOrderUseCaseImpl implements CreateBuyCryptoOrderUseC
     private async resolvePrice(from: string, to: string): Promise<number> {
         const pair = `${from}_${to}`;
 
-        if (ENV.USE_LIVE_EXCHANGE_RATE) {
-            const cached = this.exchangeRateCache.getRate(pair);
-            if (cached !== null && cached > 0) {
-                return cached;
-            }
-
-            logger.warn(`Cache miss for ${pair} — fetching on-demand (first request)`, false);
-            const prices = await this.assetPriceProvider.getPricesByQuote(from.toUpperCase());
-            const match  = prices.find((p) => p.symbol.toLowerCase() === to);
-
-            if (match && match.price > 0) {
-                this.exchangeRateCache.setRate(pair, match.price);
-                return match.price;
-            }
+        const cached = this.exchangeRateCache.getRate(pair);
+        if (cached !== null && cached > 0) {
+            return cached;
         }
 
-        logger.warn(`Using fallback rate for ${pair}: ${ENV.FALLBACK_EXCHANGE_RATE}`, false);
-        return ENV.FALLBACK_EXCHANGE_RATE;
+        logger.warn(`Cache miss for ${pair} — fetching on-demand`, false);
+
+        const prices = await this.assetPriceProvider.getPricesByQuote(from.toUpperCase());
+        const match  = prices.find((p) => p.symbol.toLowerCase() === to);
+
+        if (!match || match.price <= 0) {
+            throw new AssetPriceUnavailableError(`${from.toUpperCase()}→${to.toUpperCase()}`);
+        }
+
+        this.exchangeRateCache.setRate(pair, match.price);
+        return match.price;
     }
 }
