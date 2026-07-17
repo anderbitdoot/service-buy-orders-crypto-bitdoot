@@ -1,4 +1,5 @@
-import { randomUUID } from "crypto";
+import { randomUUID }          from "crypto";
+import { OrderStatus }         from "../enums/OrderStatus";
 import { InvalidOrderAmountError } from "../error/BuyCryptoOrderDomainError";
 import { BuyCryptoOrderConstants } from "../constants/BuyCryptoOrderConstants";
 
@@ -13,8 +14,11 @@ export interface BuyCryptoOrderProps {
     feeRate:       number;
     feeAmount:     number;
     total:         number;
+    status:        OrderStatus;
     expireAt:      Date;
     createdAt:     Date;
+    paidAt?:       Date;
+    cancelledAt?:  Date;
 }
 
 export interface CreateBuyCryptoOrderProps {
@@ -53,8 +57,9 @@ export class BuyCryptoOrder {
             feeRate:       props.feeRate,
             feeAmount:     props.feeAmount,
             total:         props.total,
+            status:        OrderStatus.PENDING,
             expireAt,
-            createdAt: now,
+            createdAt:     now,
         });
     }
 
@@ -62,22 +67,30 @@ export class BuyCryptoOrder {
         return new BuyCryptoOrder(props);
     }
 
-    get orderId(): string            { return this.props.orderId; }
-    get userId(): string | undefined { return this.props.userId; }
-    get from(): string               { return this.props.from; }
-    get to(): string                 { return this.props.to; }
-    get amount(): number             { return this.props.amount; }
-    get receiveAmount(): number      { return this.props.receiveAmount; }
-    get price(): number              { return this.props.price; }
-    get feeRate(): number            { return this.props.feeRate; }
-    get feeAmount(): number          { return this.props.feeAmount; }
-    get total(): number              { return this.props.total; }
-    get expireAt(): Date             { return this.props.expireAt; }
-    get createdAt(): Date            { return this.props.createdAt; }
+    get orderId(): string              { return this.props.orderId; }
+    get userId(): string | undefined   { return this.props.userId; }
+    get from(): string                 { return this.props.from; }
+    get to(): string                   { return this.props.to; }
+    get amount(): number               { return this.props.amount; }
+    get receiveAmount(): number        { return this.props.receiveAmount; }
+    get price(): number                { return this.props.price; }
+    get feeRate(): number              { return this.props.feeRate; }
+    get feeAmount(): number            { return this.props.feeAmount; }
+    get total(): number                { return this.props.total; }
+    get status(): OrderStatus          { return this.props.status; }
+    get expireAt(): Date               { return this.props.expireAt; }
+    get createdAt(): Date              { return this.props.createdAt; }
+    get paidAt(): Date | undefined     { return this.props.paidAt; }
+    get cancelledAt(): Date | undefined { return this.props.cancelledAt; }
 
     isExpired(): boolean {
-        return this.props.expireAt.getTime() < Date.now();
+        return new Date(this.props.createdAt.getTime() +
+            BuyCryptoOrderConstants.QUOTE_EXPIRATION_MINUTES * 60 * 1000) < new Date();
     }
+
+    isPending(): boolean    { return this.props.status === OrderStatus.PENDING; }
+    isPaid(): boolean       { return this.props.status === OrderStatus.PAYED; }
+    isCancelled(): boolean  { return this.props.status === OrderStatus.CANCELLED; }
 
     toPersistence(): BuyCryptoOrderProps {
         return { ...this.props };

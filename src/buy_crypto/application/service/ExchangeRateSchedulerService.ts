@@ -24,6 +24,7 @@ export class ExchangeRateSchedulerService {
         logger.info(`Exchange rate monitor started — polling every ${intervalMs / 1000}s`, false);
         this.refresh();
         this.intervalId = setInterval(() => this.refresh(), intervalMs);
+        logger.info(`Starting at ${new Date().toLocaleString()}`, false);
     }
 
     stop(): void {
@@ -53,14 +54,6 @@ export class ExchangeRateSchedulerService {
                 const previous = this.exchangeRateCache.getRate(pair);
 
                 this.exchangeRateCache.setRate(pair, price);
-
-                if (previous === null) {
-                    logger.info(`[${pair}] Initial rate: ${price}`, false);
-                } else if (previous !== price) {
-                    logger.info(`[${pair}] Rate updated: ${previous} → ${price}`, false);
-                } else {
-                    logger.debug(`[${pair}] Rate unchanged: ${price}`);
-                }
             }
         } catch (err) {
             logger.error(`Failed to refresh rates for quote=${fromCurrency}`, false, err);

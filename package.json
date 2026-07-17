@@ -8,7 +8,9 @@
   "dependencies": {
     "@hono/zod-validator": "^0.8.0",
     "@types/jsonwebtoken": "^9.0.10",
+    "bullmq": "^5.80.2",
     "hono": "^4.12.26",
+    "ioredis": "^5.11.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.9.0",
     "reflect-metadata": "^0.2.2",

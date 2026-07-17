@@ -1,46 +1,37 @@
-import { Hono } from "hono";
-import { container } from "tsyringe";
+import { Hono }          from "hono";
 import { registerMiddlewares } from "../config/middleware";
-import { ErrorHandler } from "./shared/utils/error/errorHandler";
-import { mongoDBConfig } from "./shared/database/mongodb";
-import { registerRoutes } from "../config/routes";
+import { ErrorHandler }        from "./shared/utils/error/errorHandler";
+import { mongoDBConfig }       from "./shared/database/mongodb";
+import { registerRoutes }      from "../config/routes";
 import { registerBuyCryptoOrderDependencies } from "./buy_crypto/infrastructure/di/BuyCryptoOrderContainer";
-import { registerAuthDependencies } from "./shared/di/AuthContainer";
-import { BuyCryptoOrderTokens } from "./buy_crypto/infrastructure/di/BuyCryptoOrderTokens";
-import { ExchangeRateSchedulerService } from "./buy_crypto/application/service/ExchangeRateSchedulerService";
-import { ENV } from "../config/env";
+import { registerAuthDependencies }           from "./shared/di/AuthContainer";
 
 export function createApp(): Hono {
     const app = new Hono().basePath("/v1");
 
     registerMiddlewares(app);
-
     app.onError((err, c) => ErrorHandler.handle(c, err));
 
     app.get("/", (c) => c.json({
-        status: "ok",
-        service: "bitdoot-buy-crypto-order-api",
-        timestamp: new Date().toISOString(),
+        status:      "ok",
+        service:     "bitdoot-buy-crypto-order-api",
+        timestamp:   new Date().toISOString(),
         environment: process.env.NODE_ENV || "development",
     }));
 
     app.get("/health", async (c) => {
         const mongoHealthy = await mongoDBConfig.healthCheck();
-        const isHealthy = mongoHealthy && mongoDBConfig.isConnectionActive();
+        const isHealthy    = mongoHealthy && mongoDBConfig.isConnectionActive();
         return c.json({
-            healthy: isHealthy,
+            healthy:   isHealthy,
             timestamp: new Date().toISOString(),
-            services: { api: true, mongodb: mongoHealthy },
+            services:  { api: true, mongodb: mongoHealthy },
         }, isHealthy ? 200 : 503);
     });
 
+    // Registrar dependencias DI (solo una vez aquí)
     registerAuthDependencies();
     registerBuyCryptoOrderDependencies();
-
-    const scheduler = container.resolve<ExchangeRateSchedulerService>(
-        BuyCryptoOrderTokens.ExchangeRateSchedulerService
-    );
-    scheduler.start(ENV.EXCHANGE_RATE_REFRESH_MS);
 
     registerRoutes(app);
 

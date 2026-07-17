@@ -7,6 +7,14 @@ const LEVEL_ICONS: Record<LogLevel, string> = {
     debug: "🔍 ",
 };
 
+export function formatDateTime(date: Date = new Date()): string {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return (
+        `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ` +
+        `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+    );
+}
+
 class Logger {
     private context: string;
 
@@ -14,29 +22,26 @@ class Logger {
         this.context = context;
     }
 
-    private format(level: LogLevel, message: string, showTimestamp: boolean): string {
+    private format(level: LogLevel, message: string): string {
         const icon = LEVEL_ICONS[level];
-        const timestamp = showTimestamp ? ` [${new Date().toISOString()}]` : "";
-        return `${icon}${timestamp} [${this.context}] ${message}`;
+        return `${icon} [${this.context}] ${message}`;
     }
 
-    info(message: string, showTimestamp: boolean = false): void {
-        console.log(this.format("info", message, showTimestamp));
+    info(message: string):  void { console.log(this.format("info", message)); }
+    warn(message: string):  void { console.warn(this.format("warn", message)); }
+    debug(message: string): void {
+        if (process.env.NODE_ENV !== "production") {
+            console.log(this.format("debug", message));
+        }
     }
 
-    warn(message: string, showTimestamp: boolean = false): void {
-        console.warn(this.format("warn", message, showTimestamp));
-    }
-
-    error(message: string, showTimestamp: boolean = false, err?: unknown): void {
-        console.error(this.format("error", message, showTimestamp));
+    error(message: string, err?: unknown): void {
+        console.error(this.format("error", message));
         if (err) console.error(err);
     }
 
-    debug(message: string): void {
-        if (process.env.NODE_ENV !== "production") {
-            console.log(this.format("debug", message, false));
-        }
+    plain(message: string): void {
+        console.log(`${LEVEL_ICONS.info} ${message}`);
     }
 }
 

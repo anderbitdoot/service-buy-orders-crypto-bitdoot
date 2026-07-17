@@ -24,8 +24,6 @@ export class AssetPriceServiceAdapter implements AssetPriceProviderPort {
     async getPricesByQuote(quoteCurrency: string): Promise<TokenPrice[]> {
         const url = `${ENV.COMMONS_ASSETS_API_URL}?quote=${quoteCurrency.toUpperCase()}`;
 
-        logger.warn(`URLLLLLLL: , ${url}`, false);
-
         try {
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), ENV.REQUEST_TIMEOUT_MS);
@@ -48,11 +46,6 @@ export class AssetPriceServiceAdapter implements AssetPriceProviderPort {
 
             const json = (await response.json()) as CommonsAssetsResponse;
 
-            logger.warn(
-                `RESULTADOOOOOOOOO: ${JSON.stringify(json, null, 2)}`,
-                false
-            );
-
             if (!json?.meta?.success || !Array.isArray(json.data)) {
                 logger.warn(`Invalid response from commons assets`, false);
                 return [];
@@ -67,7 +60,7 @@ export class AssetPriceServiceAdapter implements AssetPriceProviderPort {
 
             if (results.length > 0) {
                 logger.info(
-                    `Prices for ${quoteCurrency.toUpperCase()}: ${results.map(r => `${r.symbol}=${r.price}`).join(", ")}`,
+                    `${new Date().toLocaleString()} Prices for ${quoteCurrency.toUpperCase()}: ${results.map(r => `${r.symbol}=${r.price}`).join(", ")}`,
                     false
                 );
             } else {
