@@ -4,7 +4,7 @@ set -e
 echo ""
 echo "  Bitdoot Infrastructure Check"
 echo "  ────────────────────────────"
-echo "  Service : ${SERVICE_NAME:-service-wallet-bitdoot}"
+echo "  Service : ${SERVICE_NAME:-service-buy-crypto-bitdoot}"
 echo "  Deploy  : ${DEPLOY_ENV:-docker}"
 echo ""
 

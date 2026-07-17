@@ -1,5 +1,5 @@
 services:
-  app-wallet-service:
+  app-buy-crypto-service:
     build:
       context: .
       dockerfile: Dockerfile
