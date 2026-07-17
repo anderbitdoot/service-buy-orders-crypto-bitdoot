@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: wallet-bitdoot
+    container_name: buy-crypto-bitdoot
     restart: no
     env_file:
       - .env.docker
