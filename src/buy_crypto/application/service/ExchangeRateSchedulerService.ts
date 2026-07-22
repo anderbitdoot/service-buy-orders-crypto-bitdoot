@@ -21,10 +21,10 @@ export class ExchangeRateSchedulerService {
     ) {}
 
     start(intervalMs: number): void {
-        logger.info(`Exchange rate monitor started — polling every ${intervalMs / 1000}s`, false);
+        logger.info(`Exchange rate monitor started — polling every ${intervalMs / 1000}s`);
         this.refresh();
         this.intervalId = setInterval(() => this.refresh(), intervalMs);
-        logger.info(`Starting at ${new Date().toLocaleString()}`, false);
+        logger.info(`Starting at ${new Date().toLocaleString()}`);
     }
 
     stop(): void {
@@ -45,7 +45,7 @@ export class ExchangeRateSchedulerService {
             const prices = await this.assetPriceProvider.getPricesByQuote(fromCurrency);
 
             if (prices.length === 0) {
-                logger.warn(`No prices returned for quote=${fromCurrency.toUpperCase()}`, false);
+                logger.warn(`No prices returned for quote=${fromCurrency.toUpperCase()}`);
                 return;
             }
 
@@ -56,7 +56,7 @@ export class ExchangeRateSchedulerService {
                 this.exchangeRateCache.setRate(pair, price);
             }
         } catch (err) {
-            logger.error(`Failed to refresh rates for quote=${fromCurrency}`, false, err);
+            logger.error(`Failed to refresh rates for quote=${fromCurrency}`, false);
         }
     }
 }

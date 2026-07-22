@@ -67,8 +67,7 @@ export class CreateBuyCryptoOrderUseCaseImpl implements CreateBuyCryptoOrderUseC
         await this.buyCryptoOrderRepository.save(order);
 
         logger.info(
-            `Order ${order.orderId} — ${input.amount} ${from.toUpperCase()} → ${receiveAmount} ${to.toUpperCase()} @ ${price}`,
-            false
+            `Order ${order.orderId} — ${input.amount} ${from.toUpperCase()} → ${receiveAmount} ${to.toUpperCase()} @ ${price}`
         );
 
         return order;
@@ -82,7 +81,7 @@ export class CreateBuyCryptoOrderUseCaseImpl implements CreateBuyCryptoOrderUseC
             return cached;
         }
 
-        logger.warn(`Cache miss for ${pair} — fetching on-demand`, false);
+        logger.warn(`Cache miss for ${pair} — fetching on-demand`);
 
         const prices = await this.assetPriceProvider.getPricesByQuote(from.toUpperCase());
         const match  = prices.find((p) => p.symbol.toLowerCase() === to);

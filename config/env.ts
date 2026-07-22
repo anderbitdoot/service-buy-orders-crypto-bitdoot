@@ -7,7 +7,7 @@ const envSchema = z.object({
     SERVICE_NAME:       z.string().default("BUY CRYPTO"),
     REQUEST_TIMEOUT_MS: z.coerce.number().default(30_000),
 
-    MONGODB_URI:                z.string().url(),
+    MONGODB_URI:                z.url(),
     MONGODB_DATABASE:           z.string().default("bitdoot_db"),
     MONGODB_MAX_POOL_SIZE:      z.coerce.number().default(10),
     MONGODB_MIN_POOL_SIZE:      z.coerce.number().default(2),

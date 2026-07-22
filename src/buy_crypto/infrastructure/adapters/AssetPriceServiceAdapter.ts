@@ -47,7 +47,7 @@ export class AssetPriceServiceAdapter implements AssetPriceProviderPort {
             const json = (await response.json()) as CommonsAssetsResponse;
 
             if (!json?.meta?.success || !Array.isArray(json.data)) {
-                logger.warn(`Invalid response from commons assets`, false);
+                logger.warn(`Invalid response from commons assets`);
                 return [];
             }
 
@@ -60,17 +60,16 @@ export class AssetPriceServiceAdapter implements AssetPriceProviderPort {
 
             if (results.length > 0) {
                 logger.info(
-                    `${new Date().toLocaleString()} Prices for ${quoteCurrency.toUpperCase()}: ${results.map(r => `${r.symbol}=${r.price}`).join(", ")}`,
-                    false
+                    `${new Date().toLocaleString()} Prices for ${quoteCurrency.toUpperCase()}: ${results.map(r => `${r.symbol}=${r.price}`).join(", ")}`
                 );
             } else {
-                logger.warn(`Commons returned all prices as 0 for quote=${quoteCurrency}`, false);
+                logger.warn(`Commons returned all prices as 0 for quote=${quoteCurrency}`);
             }
 
             return results;
 
         } catch (err) {
-            logger.error(`Failed to fetch prices for quote=${quoteCurrency}`, false, err);
+            logger.error(`Failed to fetch prices for quote=${quoteCurrency}`, false);
             return [];
         }
     }
