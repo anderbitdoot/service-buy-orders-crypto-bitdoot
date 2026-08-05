@@ -1,5 +1,6 @@
 export interface TokenPrice {
     symbol: string;
+    name:   string;
     price:  number;
 }
 

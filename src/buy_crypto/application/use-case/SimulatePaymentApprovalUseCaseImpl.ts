@@ -1,15 +1,22 @@
 import { inject, injectable }  from "tsyringe";
 import { BuyCryptoOrderTokens } from "../../infrastructure/di/BuyCryptoOrderTokens";
-import type { BuyCryptoOrderRepositoryPort } from "../../domain/ports/out/BuyCryptoOrderRepositoryPort";
+import type { BuyCryptoOrderRepositoryPort }      from "../../domain/ports/out/BuyCryptoOrderRepositoryPort";
+import type { UpdateBalanceOnPaymentUseCaseImpl } from "./UpdateBalanceOnPaymentUseCaseImpl";
 import { BuyCryptoOrder }   from "../../domain/model/BuyCryptoOrder";
 import { OrderStatus }      from "../../domain/enums/OrderStatus";
 import { ENV }              from "../../../../config/env";
+import { createLogger }     from "../../../shared/utils/logs/Logger";
+
+const logger = createLogger("SimulatePaymentApproval");
 
 @injectable()
 export class SimulatePaymentApprovalUseCaseImpl {
     constructor(
         @inject(BuyCryptoOrderTokens.BuyCryptoOrderRepositoryPort)
         private readonly repository: BuyCryptoOrderRepositoryPort,
+
+        @inject(BuyCryptoOrderTokens.UpdateBalanceOnPaymentUseCase)
+        private readonly updateBalance: UpdateBalanceOnPaymentUseCaseImpl,
     ) {}
 
     async execute(orderId: string): Promise<BuyCryptoOrder> {
@@ -45,6 +52,15 @@ export class SimulatePaymentApprovalUseCaseImpl {
         );
 
         if (!updated) throw new Error(`Failed to update order '${orderId}'`);
+
+        try {
+            await this.updateBalance.execute(updated);
+        } catch (err) {
+            logger.error(
+                `Balance update failed for orderId=${orderId} — order is payed but balance was not updated`,
+                err
+            );
+        }
 
         return updated;
     }

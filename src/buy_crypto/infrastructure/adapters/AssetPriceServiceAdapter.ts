@@ -1,11 +1,11 @@
-import { injectable } from "tsyringe";
+import { injectable }  from "tsyringe";
 import type { AssetPriceProviderPort, TokenPrice } from "../../domain/ports/out/AssetPriceProviderPort";
-import { ENV } from "../../../../config/env";
+import { ENV }         from "../../../../config/env";
 import { createLogger } from "../../../shared/utils/logs/Logger";
 
-const logger = createLogger("AssetPriceServiceAdapter");
+const logger = createLogger("AssetPriceProvider");
 
-interface DataCommonsAsset {
+interface CommonsAsset {
     name:      string;
     coinId:    string;
     price:     number;
@@ -16,20 +16,20 @@ interface DataCommonsAsset {
 
 interface CommonsAssetsResponse {
     meta: { success: boolean; numRecords: number; totalRecords: number };
-    data: DataCommonsAsset[];
+    data: CommonsAsset[];
 }
 
 @injectable()
 export class AssetPriceServiceAdapter implements AssetPriceProviderPort {
+
     async getPricesByQuote(quoteCurrency: string): Promise<TokenPrice[]> {
-        const url = `${ENV.COMMONS_ASSETS_API_URL}?quote=${quoteCurrency.toUpperCase()}`;
+        const url        = `${ENV.COMMONS_ASSETS_API_URL}?quote=${quoteCurrency.toUpperCase()}`;
+        const controller = new AbortController();
+        const timeout    = setTimeout(() => controller.abort(), ENV.REQUEST_TIMEOUT_MS);
 
         try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), ENV.REQUEST_TIMEOUT_MS);
-
             const response = await fetch(url, {
-                method: "GET",
+                method:  "GET",
                 headers: {
                     "Authorization": `Bearer ${ENV.COMMONS_SERVICE_TOKEN}`,
                     "Content-Type":  "application/json",
@@ -40,36 +40,34 @@ export class AssetPriceServiceAdapter implements AssetPriceProviderPort {
             clearTimeout(timeout);
 
             if (!response.ok) {
-                logger.error(`HTTP ${response.status} fetching prices for quote=${quoteCurrency}`, false);
+                logger.error(`HTTP ${response.status} fetching prices for quote=${quoteCurrency.toUpperCase()}`);
                 return [];
             }
 
             const json = (await response.json()) as CommonsAssetsResponse;
 
             if (!json?.meta?.success || !Array.isArray(json.data)) {
-                logger.warn(`Invalid response from commons assets`);
+                logger.warn(`Invalid response structure from commons assets`);
                 return [];
             }
 
             const results: TokenPrice[] = json.data
-                .filter((item) => item.price > 0)
-                .map((item) => ({
+                .filter(item => item.price > 0)
+                .map(item => ({
                     symbol: item.symbol.toUpperCase(),
+                    name:   item.name,           // ← nombre legible (ej: "Tether")
                     price:  item.price,
                 }));
 
-            if (results.length > 0) {
-                logger.info(
-                    `${new Date().toLocaleString()} Prices for ${quoteCurrency.toUpperCase()}: ${results.map(r => `${r.symbol}=${r.price}`).join(", ")}`
-                );
-            } else {
-                logger.warn(`Commons returned all prices as 0 for quote=${quoteCurrency}`);
+            if (results.length === 0) {
+                logger.warn(`Commons returned all prices as 0 for quote=${quoteCurrency.toUpperCase()}`);
             }
 
             return results;
 
         } catch (err) {
-            logger.error(`Failed to fetch prices for quote=${quoteCurrency}`, false);
+            clearTimeout(timeout);
+            logger.error(`Failed to fetch prices for quote=${quoteCurrency.toUpperCase()}`, err);
             return [];
         }
     }
