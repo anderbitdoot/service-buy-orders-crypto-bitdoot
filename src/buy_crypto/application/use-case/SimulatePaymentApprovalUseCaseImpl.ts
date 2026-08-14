@@ -2,8 +2,10 @@ import { inject, injectable }  from "tsyringe";
 import { BuyCryptoOrderTokens } from "../../infrastructure/di/BuyCryptoOrderTokens";
 import type { BuyCryptoOrderRepositoryPort }      from "../../domain/ports/out/BuyCryptoOrderRepositoryPort";
 import type { UpdateBalanceOnPaymentUseCaseImpl } from "./UpdateBalanceOnPaymentUseCaseImpl";
+import type { RecordBuyCryptoTransactionUseCaseImpl } from "./RecordBuyCryptoTransactionUseCaseImpl";
 import { BuyCryptoOrder }   from "../../domain/model/BuyCryptoOrder";
 import { OrderStatus }      from "../../domain/enums/OrderStatus";
+import { TransactionStatus } from "../../domain/enums/TransactionStatus";
 import { ENV }              from "../../../../config/env";
 import { createLogger }     from "../../../shared/utils/logs/Logger";
 
@@ -17,6 +19,9 @@ export class SimulatePaymentApprovalUseCaseImpl {
 
         @inject(BuyCryptoOrderTokens.UpdateBalanceOnPaymentUseCase)
         private readonly updateBalance: UpdateBalanceOnPaymentUseCaseImpl,
+
+        @inject(BuyCryptoOrderTokens.RecordBuyCryptoTransactionUseCase)
+        private readonly recordTransaction: RecordBuyCryptoTransactionUseCaseImpl,
     ) {}
 
     async execute(orderId: string): Promise<BuyCryptoOrder> {
@@ -27,6 +32,7 @@ export class SimulatePaymentApprovalUseCaseImpl {
         }
 
         if (order.isCancelled()) {
+            await this.recordTransaction.execute(order, TransactionStatus.PENDING);
             throw new Error(
                 `Order '${orderId}' is cancelled (expired). ` +
                 `The user must contact support to resolve a late payment.`
@@ -39,6 +45,7 @@ export class SimulatePaymentApprovalUseCaseImpl {
 
         const deadline = new Date(order.createdAt.getTime() + ENV.ORDER_EXPIRY_MS);
         if (new Date() > deadline) {
+            await this.recordTransaction.execute(order, TransactionStatus.PENDING);
             throw new Error(
                 `Order '${orderId}' exceeded the payment window ` +
                 `(${ENV.ORDER_EXPIRY_MS / 60_000} min). Contact support.`
@@ -61,6 +68,8 @@ export class SimulatePaymentApprovalUseCaseImpl {
                 err
             );
         }
+
+        await this.recordTransaction.execute(updated, TransactionStatus.SUCCESS);
 
         return updated;
     }

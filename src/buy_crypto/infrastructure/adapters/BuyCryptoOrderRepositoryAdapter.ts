@@ -17,6 +17,7 @@ export class BuyCryptoOrderRepositoryAdapter implements BuyCryptoOrderRepository
         if (!doc) return null;
         return BuyCryptoOrder.fromPersistence({
             orderId:       doc.orderId,
+            mongoId:       doc._id.toString(),
             userId:        doc.userId,
             from:          doc.from,
             to:            doc.to,
@@ -43,6 +44,7 @@ export class BuyCryptoOrderRepositoryAdapter implements BuyCryptoOrderRepository
 
         return docs.map(doc => BuyCryptoOrder.fromPersistence({
             orderId:       doc.orderId,
+            mongoId:       doc._id.toString(),
             userId:        doc.userId,
             from:          doc.from,
             to:            doc.to,
@@ -69,6 +71,7 @@ export class BuyCryptoOrderRepositoryAdapter implements BuyCryptoOrderRepository
 
         return docs.map(doc => BuyCryptoOrder.fromPersistence({
             orderId:       doc.orderId,
+            mongoId:       doc._id.toString(),
             userId:        doc.userId,
             from:          doc.from,
             to:            doc.to,
@@ -104,6 +107,7 @@ export class BuyCryptoOrderRepositoryAdapter implements BuyCryptoOrderRepository
 
         return BuyCryptoOrder.fromPersistence({
             orderId:       doc.orderId,
+            mongoId:       doc._id.toString(),
             userId:        doc.userId,
             from:          doc.from,
             to:            doc.to,

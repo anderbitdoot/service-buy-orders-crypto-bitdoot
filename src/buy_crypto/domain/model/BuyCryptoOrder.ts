@@ -5,6 +5,7 @@ import { BuyCryptoOrderConstants } from "../constants/BuyCryptoOrderConstants";
 
 export interface BuyCryptoOrderProps {
     orderId:       string;
+    mongoId?:      string;
     userId?:       string;
     from:          string;
     to:            string;
@@ -68,6 +69,7 @@ export class BuyCryptoOrder {
     }
 
     get orderId(): string              { return this.props.orderId; }
+    get mongoId(): string | undefined  { return this.props.mongoId; }
     get userId(): string | undefined   { return this.props.userId; }
     get from(): string                 { return this.props.from; }
     get to(): string                   { return this.props.to; }

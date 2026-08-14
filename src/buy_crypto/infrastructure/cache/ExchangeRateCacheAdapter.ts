@@ -5,6 +5,7 @@ import type { ExchangeRateCachePort } from "../../domain/ports/out/ExchangeRateC
 export class ExchangeRateCacheAdapter implements ExchangeRateCachePort {
     private readonly rates = new Map<string, number>();
     private readonly names = new Map<string, string>();
+    private readonly coinIds = new Map<string, string>();
 
     getRate(pair: string): number | null {
         return this.rates.get(pair) ?? null;
@@ -20,5 +21,13 @@ export class ExchangeRateCacheAdapter implements ExchangeRateCachePort {
 
     setAssetName(symbol: string, name: string): void {
         this.names.set(symbol.toUpperCase(), name);
+    }
+
+    getCoinId(symbol: string): string | null {
+        return this.coinIds.get(symbol.toUpperCase()) ?? null;
+    }
+
+    setCoinId(symbol: string, coinId: string): void {
+        this.coinIds.set(symbol.toUpperCase(), coinId);
     }
 }

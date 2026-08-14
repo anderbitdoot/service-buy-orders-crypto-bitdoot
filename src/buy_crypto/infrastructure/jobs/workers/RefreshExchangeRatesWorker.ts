@@ -35,11 +35,12 @@ export function startRefreshExchangeRatesWorker() {
                 const summary = prices.map(r => `${r.symbol}=${r.price}`).join(", ");
                 logger.plain(`${formatDateTime()} Prices for ${from.toUpperCase()}: ${summary}`);
 
-                for (const { symbol, name, price } of prices) {
+                for (const { symbol, name, coinId, price } of prices) {
                     const pair = `${from.toLowerCase()}_${symbol.toLowerCase()}`;
 
                     rateCache.setRate(pair, price);
                     rateCache.setAssetName(symbol, name);
+                    rateCache.setCoinId(symbol, coinId);
 
                     const cutoff     = new Date(Date.now() - ENV.ORDER_EXPIRY_MS);
                     const newExpireAt = new Date(Date.now() + ENV.EXCHANGE_RATE_REFRESH_MS);

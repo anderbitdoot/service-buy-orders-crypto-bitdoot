@@ -1,6 +1,7 @@
 export interface TokenPrice {
     symbol: string;
     name:   string;
+    coinId: string;
     price:  number;
 }
 

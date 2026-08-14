@@ -56,6 +56,7 @@ export class AssetPriceServiceAdapter implements AssetPriceProviderPort {
                 .map(item => ({
                     symbol: item.symbol.toUpperCase(),
                     name:   item.name,           // ← nombre legible (ej: "Tether")
+                    coinId: item.coinId,          // ← id de commons (ej: "usdt-tether")
                     price:  item.price,
                 }));
 
